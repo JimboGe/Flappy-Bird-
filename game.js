@@ -1,158 +1,137 @@
+const canv = document.getElementById('field');
+const div = document.getElementsByTagName('div')[0];
+const ctx = canv.getContext('2d');
 
-class Bird {
-    constructor(params) {
-        this.ctx = params.ctx;
-        this.div = params.div;
-        this.sx = params.sx;
-        this.sy = params.sy;
-        this.sw = params.sw;
-        this.sh = params.sh;
-        this.x = params.x;
-        this.y = params.y;
-        this.width = params.width;
-        this.height = params.height;
-
-        this.speed_gravitaion = 1.22;
-        this.valueToUp = 85;
-
-        this.frame = 0;
-        this.frameCount = 0;
-
-        this.started = false;
-        this.lockTimer = false;
-
-        this.bird_img = new Image();
-        this.bird_img.src = '/images/sprite-bird.png';
-
-        this.load(this);
-        this.animation(this);
+canv.height = div.clientHeight;
+canv.width = div.clientWidth;
 
 
-    }
+let SPEED_MOVING_OBJECT = 3.5;
+let SCORE = 0;
+let lose = false;
 
-    load(params) {
-        params.bird_img.onload = () => {
-            params.ctx.drawImage(params.bird_img, params.sx, params.sy, params.sw, params.sh, params.x, params.y, params.width, params.height);
-        };
+const bg = new Image();
+bg.src = '/images/bg1.png';
 
-    }
+const bird = {
+    sprite: new Image(),
 
-    animation(params) {
+    x: canv.width / 2 - 33,
+    y: canv.height / 2,
 
-        window.requestAnimationFrame(function anim() {
-            //FPS
-            // params.frameCount++;
-            // if (params.frameCount < 10) {
-            //     window.requestAnimationFrame(anim);
-            //     return;
-            // }
-            // params.frameCount = 0;
+    width_height: 34,
+    sprite_width_height: 53,
 
-            params.frame++;
-            params.frame = params.frame >= 4 ? 0 : params.frame;
-            params.sx = 34 * params.frame;
-            // if (!params.started) {
-            //     params.y += 5;
-            //     if (params.y > 330) params.y -= 10;
-            // }
-            params.ctx.clearRect(params.x, params.y - 50, params.width, 115);
-            params.ctx.drawImage(
-                params.bird_img,
-                params.sx, params.sy,
-                params.sw, params.sh,
-                params.x, params.y,
-                params.width, params.height);
-            window.requestAnimationFrame(anim);
-        });
-        if (!params.started) {
-            document.addEventListener('keydown', (e) => {
-                if (e.key == ' ') {
-                    if (!this.started) {
-                        this.turn_on_gravitation();
-                    }
-                    this.started = true;
-                }
-            });
+    frame: 0,
+    period: 0,
+    value_for_jumping: 75,
+    jumped: false,
+    start_point_jump: 0,
+
+    gravitation: function () {
+        if (this.y < 535) {
+            this.y += 5;
         }
+    },
+    jump: function () {
+        if (this.jumped) {
+            this.y < this.start_point_jump - this.value_for_jumping ? this.jumped = false : this.y -= 10;
+        }
+    },
+    frame_regulation: function () {
+        this.period += 0.1;
+        if (this.period >= 1) {
+            this.frame = this.frame != 3 ? this.frame + 1 : this.frame = 0;
+            this.period = 0;
+        }
+    },
+    lose: function(){
+        if(this.y + this.width_height + 1 >= earth.height){
+            lose = true;
+        }
+        /////////////////////////////////////YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY
+        if(this.x + this.width_height + 1 == block.x - block.move ){
+            
+        }
+        console.log('bird : ' + this.x + ', ' + 'block : ' + block.x);
 
     }
+}
+const earth = {
+    sprite: new Image(),
+    count: 0,
+    move: 0,
+    x: 25,
+    y: 570,
+    draw: function () {
+        this.move += SPEED_MOVING_OBJECT;
 
-
-    turn_on_gravitation() {
-
-        let id = setInterval(() => {
-            this.y += this.speed_gravitaion;
-            if (this.y > this.div.clientHeight - 115) {
-                clearInterval(id);
-            }
-        }, 1);
-
-    }
-    move_up_bird() {
-        let new_y = 0;
-        new_y = this.y - this.valueToUp;
-        if (new_y > -150) {
-            let id = setInterval(() => {
-                this.y -= this.speed_gravitaion * 2;
-                if (this.y < new_y) {
-                    clearInterval(id);
-                }
-            }, 1);
+        for (this.count = 0; this.count < 35; this.count++) {
+            if (this.move >= 400) this.move = 0;
+            ctx.drawImage(this.sprite, this.x * this.count - this.move, this.y, 25, 100);
         }
     }
 }
-class Earth {
-    constructor(params) {
-        this.ctx = params.ctx;
-        this.earth_img = new Image();
-        this.earth_img.src = '/images/spr_earth.png';
-        this.x = params.x;
-        this.y = params.y;
-        this.loadEarth(this);
-    }
-    loadEarth(params) {
-        params.earth_img.onload = () => {
-            params.ctx.drawImage(params.earth_img, params.x, params.y);
-
-            for(let i=0; i<23; i++){
-                params.x+=20;
-                params.ctx.drawImage(params.earth_img, params.x, params.y);
-            }
-        };
+const block = {
+    sprite: new Image(),
+    start_x: 400,
+    y: (Math.random() * -250) - 100,
+    x: canv.width,
+    width: 85,
+    height: 1000,
+    move: 0,
+    draw: function () {
+        this.move += SPEED_MOVING_OBJECT;
+       
+        if (this.move >= canv.width + this.width + 100) {
+            this.y = (Math.random() * -250) - 100;
+            this.move = 0;
+        }
+        ctx.drawImage(this.sprite, this.x - this.move, this.y, this.width, this.height);
     }
 }
 
 
-class Game {
-    constructor() {
+earth.sprite.src = '/images/spr_earth.png';
+bird.sprite.src = '/images/sprite-bird.png';
+block.sprite.src = '/images/spr_block.png';
 
-        const canv = document.getElementById('canvas');
-        const div = document.getElementsByTagName('div')[0];
-        const ctx = canv.getContext('2d');
-        canv.height = div.clientHeight;
-        canv.width = div.clientWidth;
 
-        let bird = new Bird({ div: div, ctx: ctx, sx: 0, sy: 0, sw: 34, sh: 40, x: 190, y: 325, width: 50, height: 60 });
-        document.addEventListener('keydown', (e) => {
-            if (e.key == ' ') {
-                bird.move_up_bird();
-            }
-        });
+function draw() {
+    ctx.drawImage(bg, 0, 0, canv.width, canv.height);
 
-        let earth = new Earth({ ctx: ctx, x: 0, y: 530 });
+    ctx.drawImage(bird.sprite, bird.frame * bird.width_height, 0,
+        bird.width_height, bird.width_height,
+        bird.x, bird.y,
+        bird.sprite_width_height, bird.sprite_width_height);
+    block.draw();
+    earth.draw();
+}
+function update() {
+    draw();
+
+    bird.frame_regulation();
+    bird.gravitation();
+    bird.lose();
+    if (bird.jumped) {
+        bird.jump();
+    }
+    if(lose){
+        SPEED_MOVING_OBJECT = 0;
     }
 
 
+    window.requestAnimationFrame(update);
 }
 
+document.addEventListener('keydown', (e) => {
+    if (e.key == ' ') {
+        bird.jumped = true;
+        bird.start_point_jump = bird.y;
+    }
+})
 
 
-let game = new Game();
 
 
-
-
-
-
-
-
+update();
